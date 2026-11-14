@@ -274,6 +274,32 @@ tr:hover td { background: #f0f5fa; }
 .muted { color: var(--muted); }
 .ok { color: var(--ok); font-weight: 600; }
 .warn { color: var(--warn); font-weight: 600; }
+.ok-note {
+  color: var(--ok);
+  margin: 8px 0 14px;
+  padding: 10px 12px;
+  background: #eefaf3;
+  border-left: 3px solid var(--ok);
+}
+.err-inline {
+  color: #b91c1c;
+  line-height: 1.6;
+}
+.conservation-note {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+.conservation-note p { margin: 4px 0; line-height: 1.6; }
+.conservation-note ul { margin: 8px 0 0 18px; padding: 0; }
+.conservation-note li { margin: 4px 0; line-height: 1.6; }
+.failure-panel {
+  padding: 14px 16px;
+  background: #fff8f4;
+  border-left: 3px solid var(--accent-2);
+}
+.failure-panel td, .failure-panel th { background: transparent; }
+td.msg { max-width: 30em; line-height: 1.55; }
 .err {
   color: #b91c1c;
   margin: 8px 0 14px;

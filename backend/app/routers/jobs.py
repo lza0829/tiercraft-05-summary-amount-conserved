@@ -27,6 +27,8 @@ def paste_to_detail(body: JobBody):
 
 @router.post("/jobs/detail-to-summary")
 def detail_to_summary(body: JobBody):
+    # 守恒失败不是请求错误：任务已记录为「失败」并恢复快照，照常返回任务，
+    # 让界面能展示守恒失败原因与恢复后的汇总态。
     try:
         job = pipeline.run_detail_to_summary(body.domain_id)
     except ValueError as exc:

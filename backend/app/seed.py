@@ -62,9 +62,38 @@ CREATE TABLE IF NOT EXISTS layer_jobs (
   in_count INTEGER NOT NULL DEFAULT 0,
   out_count INTEGER NOT NULL DEFAULT 0,
   drop_count INTEGER NOT NULL DEFAULT 0,
+  amount_detail_total REAL NOT NULL DEFAULT 0,
+  amount_summary_total REAL NOT NULL DEFAULT 0,
+  amount_drift REAL NOT NULL DEFAULT 0,
+  tolerance REAL NOT NULL DEFAULT 0.000001,
+  conserved INTEGER,
+  restored INTEGER NOT NULL DEFAULT 0,
+  summary_before_rows INTEGER NOT NULL DEFAULT 0,
+  summary_after_rows INTEGER NOT NULL DEFAULT 0,
+  summary_before_amount REAL NOT NULL DEFAULT 0,
+  summary_after_amount REAL NOT NULL DEFAULT 0,
+  snapshot_token TEXT NOT NULL DEFAULT '',
+  conservation_json TEXT NOT NULL DEFAULT '{}',
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY(domain_id) REFERENCES domains(id)
 );
+
+CREATE TABLE IF NOT EXISTS layer_summary_snapshots (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  domain_id INTEGER NOT NULL,
+  token TEXT NOT NULL,
+  row_id INTEGER NOT NULL,
+  biz_day TEXT NOT NULL,
+  store_code TEXT NOT NULL,
+  amount_sum REAL NOT NULL,
+  qty_sum INTEGER NOT NULL,
+  line_count INTEGER NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY(domain_id) REFERENCES domains(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_summary_snapshots_token
+  ON layer_summary_snapshots(token, id);
 
 CREATE TABLE IF NOT EXISTS reconcile_reports (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,16 +111,43 @@ CREATE TABLE IF NOT EXISTS reconcile_reports (
 """
 
 
+# 旧库升级：CREATE TABLE IF NOT EXISTS 不会补列，这里按 PRAGMA 结果逐列补齐。
+JOB_COLUMN_MIGRATIONS = {
+    "amount_detail_total": "REAL NOT NULL DEFAULT 0",
+    "amount_summary_total": "REAL NOT NULL DEFAULT 0",
+    "amount_drift": "REAL NOT NULL DEFAULT 0",
+    "tolerance": "REAL NOT NULL DEFAULT 0.000001",
+    "conserved": "INTEGER",
+    "restored": "INTEGER NOT NULL DEFAULT 0",
+    "summary_before_rows": "INTEGER NOT NULL DEFAULT 0",
+    "summary_after_rows": "INTEGER NOT NULL DEFAULT 0",
+    "summary_before_amount": "REAL NOT NULL DEFAULT 0",
+    "summary_after_amount": "REAL NOT NULL DEFAULT 0",
+    "snapshot_token": "TEXT NOT NULL DEFAULT ''",
+    "conservation_json": "TEXT NOT NULL DEFAULT '{}'",
+}
+
+
 def init_db() -> None:
     conn = connect()
     try:
         conn.executescript(SCHEMA)
+        _ensure_columns(conn, "layer_jobs", JOB_COLUMN_MIGRATIONS)
         row = conn.execute("SELECT COUNT(*) AS c FROM domains").fetchone()
         if int(row["c"]) == 0:
             _seed_domain(conn)
         conn.commit()
     finally:
         conn.close()
+
+
+def _ensure_columns(conn, table: str, columns: dict[str, str]) -> None:
+    existing = {
+        r["name"] for r in conn.execute(f"PRAGMA table_info({table})").fetchall()
+    }
+    for name, decl in columns.items():
+        if name not in existing:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {name} {decl}")
 
 
 def _seed_domain(conn) -> None:

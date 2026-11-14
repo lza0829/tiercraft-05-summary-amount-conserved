@@ -53,10 +53,16 @@ const meter = computed(() => {
       <div class="panel">
         <h3>最近分层任务</h3>
         <table v-if="data.最近任务.length">
-          <thead><tr><th>编号</th><th>步骤</th><th>状态</th><th>写入</th><th>剔除</th></tr></thead>
+          <thead><tr><th>编号</th><th>步骤</th><th>状态</th><th>写入</th><th>剔除</th><th>明细合计</th><th>汇总合计</th><th>漂移</th></tr></thead>
           <tbody>
             <tr v-for="j in data.最近任务" :key="j.编号">
-              <td>{{ j.编号 }}</td><td>{{ j.步骤 }}</td><td>{{ j.状态 }}</td><td>{{ j.写入 }}</td><td>{{ j.剔除 }}</td>
+              <td>{{ j.编号 }}</td>
+              <td>{{ j.步骤 }}</td>
+              <td :class="j.状态 === '成功' ? 'ok' : 'warn'">{{ j.状态 }}</td>
+              <td>{{ j.写入 }}</td><td>{{ j.剔除 }}</td>
+              <td>{{ j.明细合计 ?? '—' }}</td>
+              <td>{{ j.汇总合计 ?? '—' }}</td>
+              <td>{{ j.漂移 ?? '—' }}</td>
             </tr>
           </tbody>
         </table>
@@ -66,12 +72,15 @@ const meter = computed(() => {
       <div class="panel">
         <h3>最近层间对账</h3>
         <table v-if="data.最近对账.length">
-          <thead><tr><th>编号</th><th>状态</th><th>明细行数</th><th>汇总行数合计</th></tr></thead>
+          <thead><tr><th>编号</th><th>状态</th><th>明细行数</th><th>汇总行数合计</th><th>明细金额合计</th><th>汇总金额合计</th><th>漂移</th></tr></thead>
           <tbody>
             <tr v-for="r in data.最近对账" :key="r.编号">
               <td>{{ r.编号 }}</td>
               <td :class="r.状态 === '一致' ? 'ok' : 'warn'">{{ r.状态 }}</td>
               <td>{{ r.明细行数 }}</td><td>{{ r.汇总行数合计 }}</td>
+              <td>{{ r.明细金额合计 ?? '—' }}</td>
+              <td>{{ r.汇总金额合计 ?? '—' }}</td>
+              <td>{{ r.金额漂移 ?? '—' }}</td>
             </tr>
           </tbody>
         </table>

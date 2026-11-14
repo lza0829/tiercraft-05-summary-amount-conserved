@@ -10,6 +10,14 @@ def counts(domain_id: int | None = Query(default=None)):
     return pipeline.layer_counts(domain_id)
 
 
+@router.get("/layers/summary/state")
+def summary_state(domain_id: int = Query(...)):
+    try:
+        return pipeline.summary_state(domain_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
 @router.get("/layers/{layer}")
 def list_layer(layer: str, domain_id: int | None = Query(default=None)):
     mapping = {"paste": "paste", "detail": "detail", "summary": "summary",
